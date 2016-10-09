@@ -2,13 +2,16 @@
 #define Game_hpp
 #include <vector>
 #include "Tile.h"
+#include <SDL2_mixer/SDL_mixer.h>
 
 class Game {
 public:
     Game();
     
+    void loop();
+    void menuLoop();
     void gameLoop();
-    void makeTiles(const int& n);
+    void makeTiles();
     void loadPositions(const int& n);
     void scrambleTiles(std::vector<Tile> t);
     bool isSolved();
@@ -22,10 +25,12 @@ private:
     int  gameState  { 0 };
     bool gameExit   { false };
     bool gameWin    { true  };
-    bool catMode    { false };
+    bool catMode    { true };
     
     std::vector<Tile> tiles;
     std::vector<SDL_Rect> positions;
+    
+    Mix_Chunk* click;
 };
 
 #endif /* Game_hpp */

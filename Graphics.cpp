@@ -3,6 +3,7 @@
 #include <iostream>
 #include <SDL2_ttf/SDL_ttf.h>
 
+
 Graphics::Graphics() {
     
 }
@@ -37,21 +38,17 @@ void Graphics::destroy() {
 }
 
 void Graphics::drawBoard(const std::vector<Tile>& v) {
-    //SDL_SetRenderDrawColor(renderer, 172, 119, 120, 22);
-    //SDL_SetRenderDrawColor(renderer, 72, 91, 64, 1);
-    SDL_SetRenderDrawColor(renderer, 153, 184, 152, 1);
+    SDL_SetRenderDrawColor(renderer, 153, 184, 152, 1); // bg colour
     SDL_RenderClear(renderer);
     
     for (int i = 0; i < v.size(); ++i)
         drawTile(v[i]);
-    
-    //SDL_RenderPresent(renderer);
 }
 
 void Graphics::drawTile(const Tile& t) {
     // Keep tile0 invisible
     if (t.number() != 0)
-        SDL_SetRenderDrawColor(renderer, 42, 54, 59, 1); // white
+        SDL_SetRenderDrawColor(renderer, 42, 54, 59, 1);
     
     // Render tile
     SDL_Rect temp = t.position();
@@ -61,7 +58,7 @@ void Graphics::drawTile(const Tile& t) {
     if (t.number() != 0) {
         std::string msg = std::to_string(t.number());
         SDL_Colour colour {232, 74, 95, 1};
-        tilenumber = renderText(msg, "Calibrib.ttf", colour, 25);
+        tilenumber = renderText(msg, "assets/Calibrib.ttf", colour, 25);
         SDL_QueryTexture(tilenumber, NULL, NULL, &temp.w, &temp.h);
         renderTexture(tilenumber, temp.x+(TILE_SIZE/2 - temp.w/2), temp.y+(TILE_SIZE/2 - temp.h/2), nullptr);
     }
@@ -70,14 +67,14 @@ void Graphics::drawTile(const Tile& t) {
 void Graphics::updateClicks(int n) {
     std::string count = std::to_string(n);
     std::string message = "Clicks: " + count;
-    clicks = renderText(message, "Calibrib.ttf", fontcolour, 17);
+    clicks = renderText(message, "assets/Calibrib.ttf", fontcolour, 17);
     int W; int H;
     SDL_QueryTexture(clicks, NULL, NULL, &W, &H);
-    renderTexture(clicks, (0.5*WINDOW_WIDTH - 0.5*W), (WINDOW_HEIGHT - 0.5*WINDOW_PADDING - 0.5*H), nullptr);
+    renderTexture(clicks, (WINDOW_PADDING), (WINDOW_HEIGHT - 0.75*WINDOW_PADDING - H), nullptr);
 }
 
 void Graphics::winMessage() {
-    wintext = renderText("You win! Click anywhere to restart", "Calibrib.ttf", fontcolour, 20);
+    wintext = renderText("You win! Click anywhere to restart", "assets/Calibrib.ttf", fontcolour, 20);
     int W; int H;
     SDL_QueryTexture(wintext, NULL, NULL, &W, &H);
     renderTexture(wintext, (0.5*WINDOW_WIDTH - 0.5*W), (0.5*WINDOW_PADDING - 0.5*H), nullptr);

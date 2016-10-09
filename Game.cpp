@@ -10,9 +10,9 @@ Game::Game() {
     // Set up SDL window & renderer
     graphics.setup();
     // Fill vector 'positions' with possible positions of n*n tiles
-    loadPositions(graphics.gridSize);
+    loadPositions(graphics.gridSize());
     // Assign these starting positions to n*n tiles in vector 'tiles'.
-    makeTiles(graphics.gridSize);
+    makeTiles();
     // Draw the tiles and clicks
     graphics.drawBoard(tiles);
     graphics.updateClicks(clicks);
@@ -45,7 +45,7 @@ void Game::loadPositions(const int& n) {
     }
 }
 
-void Game::makeTiles(const int& n) {
+void Game::makeTiles() {
     for (int i = 0; i < positions.size(); ++i) {
         tiles.push_back(Tile{positions[i], i, i});
     }
@@ -63,6 +63,14 @@ void Game::scrambleTiles(std::vector<Tile> t) {
 }
 
 void Game::gameLoop() {
+    //Temporary! to do
+    Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+    click = Mix_LoadWAV("assets/hover.wav");
+    if( click == NULL )
+    {
+        printf( "Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError() );
+    }
+    
     SDL_Event event;
     
     while (gameExit == false) {
@@ -90,7 +98,8 @@ void Game::gameLoop() {
                         graphics.drawBoard(tiles);
                         graphics.updateClicks(clicks);
                         graphics.update();
-                        // update clicks text
+                        if (catMode == true)
+                            Mix_PlayChannel(-1, click, 0);
                     }
                     
                 }
@@ -118,8 +127,8 @@ int Game::clickedTile(const int &x, const int &y) {
 bool Game::isNeighbor(const Tile& a, const Tile& b) {
     if (a.posNumber() == b.posNumber() - 1 ||
         a.posNumber() == b.posNumber() + 1 ||
-        a.posNumber() == b.posNumber() + graphics.gridSize ||
-        a.posNumber() == b.posNumber() - graphics.gridSize)
+        a.posNumber() == b.posNumber() + graphics.gridSize() ||
+        a.posNumber() == b.posNumber() - graphics.gridSize())
         return true;
     return false;
 }
@@ -132,7 +141,7 @@ bool Game::isSolved() {
             tiles[i].position().y == positions[i].y)
             correctiles += 1;
     }
-    if (correctiles == graphics.gridSize*graphics.gridSize)
+    if (correctiles == graphics.gridSize()*graphics.gridSize())
         return true;
     return false;
 }
