@@ -1,36 +1,33 @@
-#ifndef Game_hpp
-#define Game_hpp
+#ifndef Game_h
+#define Game_h
 #include <vector>
-#include "Tile.h"
-#include <SDL2_mixer/SDL_mixer.h>
+#include <SDL2/SDL.h>
+#include "Graphics.h"
+
+class GameState;
 
 class Game {
 public:
     Game();
     
+    bool init(GameState* state);
     void loop();
-    void menuLoop();
-    void gameLoop();
-    void makeTiles();
-    void loadPositions(const int& n);
-    void scrambleTiles(std::vector<Tile> t);
-    bool isSolved();
-    void restart();
     
-    bool isNeighbor(const Tile& a, const Tile& b);
-    int clickedTile(const int& x, const int& y);
-    
+    void pushState(GameState* state);
+    void popState();
+    void setQuit();
 private:
-    int  clicks     { 0 };
-    int  gameState  { 0 };
-    bool gameExit   { false };
-    bool gameWin    { true  };
-    bool catMode    { true };
+    bool quit { false };
     
-    std::vector<Tile> tiles;
-    std::vector<SDL_Rect> positions;
+    Graphics graphics;
+    SDL_Event event;
+    std::vector<GameState*> states;
     
-    Mix_Chunk* click;
+    //internal loop functions
+    void update();
+    void render();
+    
+    void quitGame(); //will free SDL resources and perform cleanup of states
 };
 
-#endif /* Game_hpp */
+#endif

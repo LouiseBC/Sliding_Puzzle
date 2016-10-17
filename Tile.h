@@ -12,6 +12,7 @@ public:
     SDL_Rect position() const { return tilePosition; }
     int number() const { return originalNumber; }
     int posNumber() const { return currentNumber; }
+    void setPosNumber(int n) { currentNumber = n; }
     
 private:
     SDL_Rect tilePosition;

@@ -37,34 +37,58 @@ void Graphics::destroy() {
     SDL_Quit();
 }
 
-void Graphics::drawBoard(const std::vector<Tile>& v) {
-    SDL_SetRenderDrawColor(renderer, 153, 184, 152, 1); // bg colour
+void Graphics::drawBoard(const std::vector<Tile>& v, const bool& drawnumber) {
+    SDL_SetRenderDrawColor(renderer, 172, 119, 120, 1); // bg colour
     SDL_RenderClear(renderer);
     
     for (int i = 0; i < v.size(); ++i)
-        drawTile(v[i]);
+        drawTile(v[i], drawnumber);
 }
 
-void Graphics::drawTile(const Tile& t) {
-    // Keep tile0 invisible
-    if (t.number() != 0)
-        SDL_SetRenderDrawColor(renderer, 42, 54, 59, 1);
+void Graphics::drawTile(const Tile& t, const bool& drawnumber) {
+    SDL_SetRenderDrawColor(renderer, 238, 230, 230, 1); // tile colour
     
-    // Render tile
-    SDL_Rect temp = t.position();
-    SDL_RenderFillRect(renderer, &temp);
-    
-    // Render tile number
-    if (t.number() != 0) {
-        std::string msg = std::to_string(t.number());
-        SDL_Colour colour {232, 74, 95, 1};
-        tilenumber = renderText(msg, "assets/Calibrib.ttf", colour, 25);
-        SDL_QueryTexture(tilenumber, NULL, NULL, &temp.w, &temp.h);
-        renderTexture(tilenumber, temp.x+(TILE_SIZE/2 - temp.w/2), temp.y+(TILE_SIZE/2 - temp.h/2), nullptr);
+    // Draw Menu Tile
+    if (drawnumber == false){
+        if (t.posNumber() == 1) {
+            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 1); // white - mouseover for menu
+            SDL_Rect temp = t.position();
+            SDL_RenderFillRect(renderer, &temp);
+        }
+        else {
+            SDL_Rect temp = t.position();
+            SDL_RenderFillRect(renderer, &temp);
+        }
+    }
+    // Draw Main Game Tile
+    else {
+        // Keep last tile invisible
+        if (t.number() == (grid*grid))
+            SDL_SetRenderDrawColor(renderer, 172, 119, 120, 1); // bg colour
+        
+        // Render tile
+        SDL_Rect temp = t.position();
+        SDL_RenderFillRect(renderer, &temp);
+        
+        // Render tile number
+        if (t.number() != (grid*grid)) {
+            std::string msg = std::to_string(t.number());
+            SDL_Colour colour {39, 134, 175, 1};
+            tilenumber = renderText(msg, "assets/Calibrib.ttf", colour, 25);
+            SDL_QueryTexture(tilenumber, NULL, NULL, &temp.w, &temp.h);
+            renderTexture(tilenumber, temp.x+(TILE_SIZE/2 - temp.w/2), temp.y+(TILE_SIZE/2 - temp.h/2), nullptr);
+        }
     }
 }
 
-void Graphics::updateClicks(int n) {
+void Graphics::setGridSize(const int& n) {
+    grid = n;
+    rawSize = (WINDOW_WIDTH - 2*WINDOW_PADDING) / grid;
+    TILE_PADDING = rawSize / 10;
+    TILE_SIZE    = rawSize - TILE_PADDING;
+}
+
+void Graphics::updateClicks(const int& n) {
     std::string count = std::to_string(n);
     std::string message = "Clicks: " + count;
     clicks = renderText(message, "assets/Calibrib.ttf", fontcolour, 17);
@@ -73,11 +97,38 @@ void Graphics::updateClicks(int n) {
     renderTexture(clicks, (WINDOW_PADDING), (WINDOW_HEIGHT - 0.75*WINDOW_PADDING - H), nullptr);
 }
 
-void Graphics::winMessage() {
-    wintext = renderText("You win! Click anywhere to restart", "assets/Calibrib.ttf", fontcolour, 20);
+void Graphics::winMessage(bool win, int clicks) {
+    if (win == true && clicks > 0){
+        wintext = renderText("You win! Click anywhere to restart", "assets/Calibrib.ttf", fontcolour, 20);
+        int W; int H;
+        SDL_QueryTexture(wintext, NULL, NULL, &W, &H);
+        renderTexture(wintext, (0.5*WINDOW_WIDTH - 0.5*W), (0.5*WINDOW_PADDING - 0.5*H), nullptr);
+    }
+}
+
+void Graphics::menuText(std::vector<SDL_Rect> positions) {
+    int number = 3;
+    SDL_Color test {0, 0, 0, 1};
     int W; int H;
-    SDL_QueryTexture(wintext, NULL, NULL, &W, &H);
-    renderTexture(wintext, (0.5*WINDOW_WIDTH - 0.5*W), (0.5*WINDOW_PADDING - 0.5*H), nullptr);
+    
+    for (int i = 0; i < 6; ++i){
+        std::string numStr = std::to_string(number);
+        std::string message = numStr + " x " + numStr;
+        
+        menutext = renderText(message, "assets/Calibrib.ttf", test, 25);
+        SDL_QueryTexture(menutext, NULL, NULL, &W, &H);
+        renderTexture(menutext, (positions[i].x + 0.5*positions[i].w - 0.5*W), (positions[i].y + 0.5*positions[i].h - 0.5*H), nullptr);
+        
+        number += 1;
+    }
+    
+    menutext = renderText("START", "assets/Calibrib.ttf", test, 25);
+    SDL_QueryTexture(menutext, NULL, NULL, &W, &H);
+    renderTexture(menutext, (positions[7].x + 0.5*positions[7].w - 0.5*W), (positions[7].y + 0.5*positions[7].h - 0.5*H), nullptr);
+    
+    menutext = renderText("Select your grid size:", "assets/Calibrib.ttf", test, 25);
+    SDL_QueryTexture(menutext, NULL, NULL, &W, &H);
+    renderTexture(menutext, 0.5*WINDOW_WIDTH - 0.5*W, WINDOW_PADDING-1.5*H, nullptr);
 }
 
 void Graphics::renderTexture(SDL_Texture *tex, int x, int y, SDL_Rect *clip = nullptr) {

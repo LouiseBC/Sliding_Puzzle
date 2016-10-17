@@ -1,148 +1,86 @@
-#include "Game.h"
-#include "Tile.h"
-#include "Graphics.h"
 #include <iostream>
 #include <random>
+#include "Game.h"
+#include "Tile.h"
+#include "Gamestate.h"
 
-Graphics graphics;
 
 Game::Game() {
-    // Set up SDL window & renderer
+    quit = false;
+}
+
+bool Game::init(GameState* state) {
     graphics.setup();
-    // Fill vector 'positions' with possible positions of n*n tiles
-    loadPositions(graphics.gridSize());
-    // Assign these starting positions to n*n tiles in vector 'tiles'.
-    makeTiles();
-    // Draw the tiles and clicks
-    graphics.drawBoard(tiles);
-    graphics.updateClicks(clicks);
-    graphics.update();
-    // Main game loop
-    gameLoop();
+    pushState(state);
+    return true;
 }
 
-void Game::restart() {
-    gameWin = false;
-    clicks = 0;
-    
-    scrambleTiles(tiles);
-    graphics.drawBoard(tiles);
-    graphics.updateClicks(clicks);
-    graphics.update();
-    gameLoop();
-}
-
-void Game::loadPositions(const int& n) {
-    int x = graphics.winPadding();
-    int y = graphics.winPadding();
-    
-    for (int i = 0; i < n; ++i) {
-        y = graphics.winPadding() + i*graphics.tileSize() + i*graphics.tilePadding();
-        for (int j = 0; j < n; ++j) {
-            x = graphics.winPadding() + j*graphics.tileSize() + j*graphics.tilePadding();
-            positions.push_back( SDL_Rect{ x, y, graphics.tileSize(), graphics.tileSize() });
-        }
-    }
-}
-
-void Game::makeTiles() {
-    for (int i = 0; i < positions.size(); ++i) {
-        tiles.push_back(Tile{positions[i], i, i});
-    }
-}
-
-void Game::scrambleTiles(std::vector<Tile> t) {
-    std::random_device rd;
-    std::mt19937 rng(rd());
-    std::uniform_int_distribution<int> range(1, tiles.size()-1);
-    
-    for (int i = 1; i < tiles.size(); ++i) {
-        int n = range(rng);
-        tiles[i].swap(tiles[n]);
-    }
-}
-
-void Game::gameLoop() {
-    //Temporary! to do
-    Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
-    click = Mix_LoadWAV("assets/hover.wav");
-    if( click == NULL )
+void Game::loop()
+{
+    while(quit == false)
     {
-        printf( "Failed to load beat music! SDL_mixer Error: %s\n", Mix_GetError() );
+        update();
+        render();
     }
-    
-    SDL_Event event;
-    
-    while (gameExit == false) {
-        while (SDL_PollEvent(&event)) {
-            
-            if (event.type == SDL_QUIT)
-                gameExit = true;
-            
-            if (event.type == SDL_KEYDOWN){
-                if (event.key.keysym.sym == SDLK_ESCAPE)
-                    gameExit = true;
-            }
-            
-            if (event.type == SDL_MOUSEBUTTONDOWN) {
-                if (gameWin == true)
-                    restart();
-                
-                int x; int y;
-                SDL_GetMouseState(&x, &y);
-                int clickedtile = clickedTile(x, y); // retreives clicked tile number or -1
-                if (clickedtile > 0) { // if mouse clicked on a tile
-                    if (isNeighbor(tiles[clickedtile], tiles[0])){
-                        tiles[clickedtile].swap(tiles[0]);
-                        clicks += 1;
-                        graphics.drawBoard(tiles);
-                        graphics.updateClicks(clicks);
-                        graphics.update();
-                        if (catMode == true)
-                            Mix_PlayChannel(-1, click, 0);
-                    }
-                    
-                }
-            }
-            if (gameWin == false && isSolved()){
-                gameWin = true;
-                graphics.winMessage();
-                graphics.update();
-            }
+    quitGame();
+}
+
+void Game::update()
+{
+    while(SDL_PollEvent(&event))
+    {
+        if(states.size() > 0){
+            states.back()->handleEvents(event);
+        }
+        if(states.size() > 0){
+            states.back()->update();
         }
     }
+}
+
+void Game::render()
+{
+    if(states.size() > 0)
+        states.back()->render();
+}
+
+void Game::quitGame() {
+    /*Quit might be called when there are still
+     some states on the stack, so we need to get rid of them*/
+    while(states.size() > 0)
+    {
+        states.back()->quit();
+        
+        /*we need to delete the dynamically allocated space*/
+        delete states.back();
+        
+        states.pop_back();
+    }
+    //states = null?
     graphics.destroy();
 }
 
-int Game::clickedTile(const int &x, const int &y) {
-    int tilenum = -1;
-    for (int i = 0; i < tiles.size(); ++i) {
-        if (! (x < tiles[i].position().x || x > tiles[i].position().x + graphics.tileSize() ||
-               y < tiles[i].position().y || y > tiles[i].position().y + graphics.tileSize() ))
-            tilenum = i ;
+void Game::setQuit() {
+    quit = true;
+}
+
+void Game::pushState(GameState* state)
+{
+    states.push_back(state);
+    if(state->init(&graphics, this) == false)
+    {
+        quit = true;
     }
-    return tilenum;
 }
 
-bool Game::isNeighbor(const Tile& a, const Tile& b) {
-    if (a.posNumber() == b.posNumber() - 1 ||
-        a.posNumber() == b.posNumber() + 1 ||
-        a.posNumber() == b.posNumber() + graphics.gridSize() ||
-        a.posNumber() == b.posNumber() - graphics.gridSize())
-        return true;
-    return false;
-}
-
-bool Game::isSolved() {
-    int correctiles = 0;
+void Game::popState()
+{
+    states.back()->quit();
+    delete states.back();
+    states.pop_back();
     
-    for (int i = 0; i < tiles.size(); ++i) {
-        if (tiles[i].position().x == positions[i].x &&
-            tiles[i].position().y == positions[i].y)
-            correctiles += 1;
+    if(states.size() == 0) 
+    {
+        quit = true;
     }
-    if (correctiles == graphics.gridSize()*graphics.gridSize())
-        return true;
-    return false;
 }
-
