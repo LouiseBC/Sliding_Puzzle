@@ -15,19 +15,22 @@ public:
     
     void pushState(GameState* state);
     void popState();
+    int statesSize() { return states.size(); }
     void setQuit();
+    
+    void toggleCatMode();
+    bool isCatMode() { return catMode; }
 private:
-    bool quit { false };
+    void update();
+    void render();
+    void quitGame();
+    
+    bool quit    { false };
+    bool catMode { false };
     
     Graphics graphics;
     SDL_Event event;
     std::vector<GameState*> states;
-    
-    //internal loop functions
-    void update();
-    void render();
-    
-    void quitGame(); //will free SDL resources and perform cleanup of states
 };
 
 #endif

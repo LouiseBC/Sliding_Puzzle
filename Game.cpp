@@ -64,23 +64,24 @@ void Game::setQuit() {
     quit = true;
 }
 
-void Game::pushState(GameState* state)
-{
-    states.push_back(state);
-    if(state->init(&graphics, this) == false)
-    {
-        quit = true;
-    }
+void Game::toggleCatMode() {
+    if (catMode == false)
+        catMode = true;
+    else if (catMode == true)
+        catMode = false;
 }
 
-void Game::popState()
-{
+void Game::pushState(GameState* state) {
+    states.push_back(state);
+    if(state->init(&graphics, this) == false)
+        quit = true;
+}
+
+void Game::popState() {
     states.back()->quit();
     delete states.back();
     states.pop_back();
     
-    if(states.size() == 0) 
-    {
+    if(states.size() == 0)
         quit = true;
-    }
 }

@@ -17,13 +17,15 @@ private:
     Graphics* graphics = NULL;
     
     // MainGame functions
-    void makeTiles();
-    void loadPositions(const int & n);
+    void makeTiles(std::vector<Tile>& tiles);
+    void makeTiles(std::vector<Tile>& shifttiles, const std::vector<SDL_Rect>& shiftpositions);
+    void loadPositions(std::vector<SDL_Rect>& positions, const int& gridsize);
+    void loadPositions(std::vector<SDL_Rect>& shiftpositions, const int& gridsize, const int& shiftpx);
     void scrambleTiles(std::vector<Tile> t);
     void restart();
     
     bool isSolved();
-    bool isNeighbor(const Tile& a, const Tile& b);
+    bool isNeighbour(const Tile& a, const Tile& b);
     int  getClickedTile(const int& x, const int& y);
     
     // MainGame data
@@ -31,12 +33,16 @@ private:
     int  clicks      { 0 };
     bool gameExit    { false };
     bool gameWin     { true  };
-    bool catMode     { true };
     
     std::vector<Tile> tiles;
+    std::vector<Tile> shiftTiles;
     std::vector<SDL_Rect> positions;
+    std::vector<SDL_Rect> shiftPositions;
     
     Mix_Chunk* click = NULL;
+    Mix_Chunk* cat1 = NULL;
+    Mix_Chunk* cat2 = NULL;
+    Mix_Chunk* cat3 = NULL;
 };
 
 #endif

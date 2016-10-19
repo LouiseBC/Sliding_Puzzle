@@ -13,6 +13,7 @@ public:
     int number() const { return originalNumber; }
     int posNumber() const { return currentNumber; }
     void setPosNumber(int n) { currentNumber = n; }
+    void setTileShift(const int& x, const int& y) { tilePosition.x += x; tilePosition.y += y; }
     
 private:
     SDL_Rect tilePosition;
