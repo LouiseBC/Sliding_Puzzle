@@ -18,9 +18,9 @@ private:
     
     // MainGame functions
     void makeTiles(std::vector<Tile>& tiles);
-    void makeTiles(std::vector<Tile>& shifttiles, const std::vector<SDL_Rect>& shiftpositions);
+    void makeTiles(std::vector<Tile>& shadowtiles, const std::vector<SDL_Rect>& shadowpositions);
     void loadPositions(std::vector<SDL_Rect>& positions, const int& gridsize);
-    void loadPositions(std::vector<SDL_Rect>& shiftpositions, const int& gridsize, const int& shiftpx);
+    void loadPositions(std::vector<SDL_Rect>& shadowpositions, const int& gridsize, const int& shiftpx);
     void scrambleTiles(std::vector<Tile> t);
     void restart();
     
@@ -35,9 +35,9 @@ private:
     bool gameWin     { true  };
     
     std::vector<Tile> tiles;
-    std::vector<Tile> shiftTiles;
+    std::vector<Tile> shadowTiles;
     std::vector<SDL_Rect> positions;
-    std::vector<SDL_Rect> shiftPositions;
+    std::vector<SDL_Rect> shadowPositions;
     
     Mix_Chunk* click = NULL;
     Mix_Chunk* cat1 = NULL;

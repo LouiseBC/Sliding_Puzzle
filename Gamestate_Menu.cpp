@@ -2,22 +2,16 @@
 #include "Gamestate_MainGame.h"
 #include <iostream>
 
-namespace tileType {
-    int button = 0;
-    int rollover = 1;
-    int shadow = 2;
-}
-
 bool MenuState::init(Graphics* graph, Game* g){
     graphics = graph;
     game = g;
     
     // Make menu tiles
     loadPositions(positions, gridSize);
-    makeTiles(tiles, positions, tileType::button);
+    makeTiles(tiles, positions, Tile::type::button);
     // Make menu 'shadow' tiles
-    loadPositions(shiftPositions, gridSize, shiftAmount);
-    makeTiles(shiftTiles, shiftPositions, tileType::shadow);
+    loadPositions(shadowPositions, gridSize, shiftAmount);
+    makeTiles(shadowTiles, shadowPositions, Tile::type::shadow);
     
     // Load sounds
     Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
@@ -34,32 +28,58 @@ bool MenuState::init(Graphics* graph, Game* g){
     return true;
 }
 
-void MenuState::quit(){
-    graphics   = NULL;
-    game       = NULL;
-    rollOver   = NULL;
-    clickSound = NULL;
-    Mix_Quit();
+void MenuState::loadPositions(std::vector<SDL_Rect>& positions, const int& gridsize) {
+    int x = graphics->winPadding();
+    int y = graphics->winPadding();
+    
+    for (int i = 0; i < gridsize; ++i) {
+        y = graphics->winPadding() + i*tileSize + i*tilePadding;
+        for (int j = 0; j < gridsize; ++j) {
+            x = graphics->winPadding() + j*tileSize + j*tilePadding;
+            positions.push_back( SDL_Rect{ x, y, tileSize, tileSize } );
+        }
+    }
+}
+
+void MenuState::loadPositions(std::vector<SDL_Rect>& shadowPositions, const int& gridsize, const int& shiftPx) {
+    int x = graphics->winPadding();
+    int y = graphics->winPadding();
+    
+    for (int i = 0; i < gridsize; ++i) {
+        y = graphics->winPadding() + i*tileSize + i*tilePadding + shiftPx;
+        for (int j = 0; j < gridsize; ++j) {
+            x = graphics->winPadding() + j*tileSize + j*tilePadding + shiftPx;
+            shadowPositions.push_back( SDL_Rect{ x, y, tileSize, tileSize } );
+        }
+    }
+}
+
+void MenuState::makeTiles(std::vector<Tile>& tiles, const std::vector<SDL_Rect>& positions, const int& tileType) {
+    for (int i = 0; i < positions.size(); ++i) {
+        tiles.push_back(Tile{positions[i], i, i, tileType});
+    }
 }
 
 void MenuState::handleEvents(SDL_Event& e) {
     if (e.type == SDL_QUIT)
         game->setQuit();
     
-    if (e.type == SDLK_SPACE && game->statesSize() > 1)
-        game->popState();
-    
-    int x; int y;
-    SDL_GetMouseState(&x, &y);
-    mousePos = getActiveTile(x, y);
+    if (e.type == SDL_KEYDOWN) {
+        if (e.key.keysym.sym == SDLK_ESCAPE)
+            game->setQuit();
+    }
     
     if (e.type == SDL_MOUSEMOTION) {
-        if (mousePos >= 0) {
-            tiles[mousePos].setPosNumber(tileType::rollover);
-            //prevMousePos = mousePos;
+        int x; int y;
+        SDL_GetMouseState(&x, &y);
+        mousePos = getActiveTile(x, y);
+
+        if (mousePos >= 0 && tiles[mousePos].tileType() != Tile::type::buttonpressed) {
+            tiles[mousePos].setTileType(Tile::type::rollover);
         }
-        else if (prevMousePos >= 0) { // if mouse is *no longer* inside button
-            tiles[prevMousePos].setPosNumber(tileType::button);
+        else if (prevMousePos >= 0 && tiles[prevMousePos].tileType() != Tile::type::buttonpressed) {
+            // if mouse is *no longer* inside button
+            tiles[prevMousePos].setTileType(Tile::type::button);
             prevMousePos = -1;
         }
     }
@@ -121,22 +141,13 @@ void MenuState::update() {
     click = false;
 }
 
-void MenuState::render(){
-    graphics->renderClear();
-    graphics->drawBoard(shiftTiles, false);
-    graphics->drawBoard(tiles, false);
-    graphics->menuText(positions, game->isCatMode());
-    graphics->update();
-}
-
 void MenuState::pushButton() {
     // Catmode button can be turned on/off
-    if (mousePos == 6 && game->isCatMode()) {
-        liftTile(mousePos);
-        game->toggleCatMode();
-    }
-    else if (mousePos == 6 && !game->isCatMode()) {
-        pushTile(mousePos);
+    if (mousePos == 6) {
+        if (game->isCatMode())
+            liftTile(mousePos);
+        else
+            pushTile(mousePos);
         game->toggleCatMode();
     }
     // all other tiles can only be turned on
@@ -150,41 +161,26 @@ void MenuState::pushButton() {
 }
 
 void MenuState::pushTile(const int& mousepos) {
-        tiles[mousepos].setTileShift(2, 2);
+    tiles[mousepos].setTileShift(2, 2);
+    tiles[mousepos].setTileType(Tile::type::buttonpressed); // this fucks shit up
 }
 void MenuState::liftTile(const int& prevbuttonClicked) {
-        tiles[prevbuttonClicked].setTileShift(-2, -2);
-    // maybe just inline these functions? Unless more is added to do
+    tiles[prevbuttonClicked].setTileShift(-2, -2);
+    tiles[prevbuttonClicked].setTileType(Tile::type::button);
 }
 
-void MenuState::loadPositions(std::vector<SDL_Rect>& positions, const int& gridsize) {
-    int x = graphics->winPadding();
-    int y = graphics->winPadding();
-    
-    for (int i = 0; i < gridsize; ++i) {
-        y = graphics->winPadding() + i*tileSize + i*tilePadding;
-        for (int j = 0; j < gridsize; ++j) {
-            x = graphics->winPadding() + j*tileSize + j*tilePadding;
-            positions.push_back( SDL_Rect{ x, y, tileSize, tileSize } );
-        }
-    }
+void MenuState::render(){
+    graphics->renderClear();
+    graphics->drawBoard(shadowTiles, false);
+    graphics->drawBoard(tiles, false);
+    graphics->menuText(tiles, game->isCatMode());
+    graphics->update();
 }
 
-void MenuState::loadPositions(std::vector<SDL_Rect>& shiftPositions, const int& gridsize, const int& shiftPx) {
-    int x = graphics->winPadding();
-    int y = graphics->winPadding();
-    
-    for (int i = 0; i < gridsize; ++i) {
-        y = graphics->winPadding() + i*tileSize + i*tilePadding + shiftPx;
-        for (int j = 0; j < gridsize; ++j) {
-            x = graphics->winPadding() + j*tileSize + j*tilePadding + shiftPx;
-            shiftPositions.push_back( SDL_Rect{ x, y, tileSize, tileSize } );
-        }
-    }
-}
-
-void MenuState::makeTiles(std::vector<Tile>& tiles, const std::vector<SDL_Rect>& positions, const int& tileType) {
-    for (int i = 0; i < positions.size(); ++i) {
-        tiles.push_back(Tile{positions[i], i, tileType});
-    }
+void MenuState::quit(){
+    graphics   = NULL;
+    game       = NULL;
+    rollOver   = NULL;
+    clickSound = NULL;
+    Mix_Quit();
 }

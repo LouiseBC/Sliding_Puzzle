@@ -18,7 +18,7 @@ void Graphics::setup() {
                 std::cerr << "Error: Create renderer" << SDL_GetError() << std::endl;
             
             else {
-                SDL_SetRenderDrawColor(renderer, 163, 118, 172, 1);
+                //SDL_SetRenderDrawColor(renderer, 163, 118, 172, 1);
                 if( TTF_Init() == -1 )
                     std::cerr << "SDL_ttf could not initialize!" << TTF_GetError() << std::endl;
                 else {
@@ -46,48 +46,38 @@ void Graphics::destroy() {
     SDL_Quit();
 }
 
-void Graphics::drawBoard(const std::vector<Tile>& v, const bool& drawnumber) {
-    SDL_SetRenderDrawColor(renderer, 163, 118, 172, 1); // bg colour
-    
-    for (int i = 0; i < v.size(); ++i)
-        drawTile(v[i], drawnumber);
+void Graphics::setGridSize(const int& n) {
+    grid = n;
+    rawSize = (WINDOW_WIDTH - 2*WINDOW_PADDING) / grid;
+    TILE_PADDING = rawSize / 10;
+    TILE_SIZE    = rawSize - TILE_PADDING;
 }
 
-void Graphics::drawTile(const Tile& t, const bool& drawnumber) {
-    SDL_SetRenderDrawColor(renderer, 237, 229, 239, 1); // tile colour
-    SDL_Rect temp = t.position();
-    
-    // Draw Menu/Shadow Tile
-    if (drawnumber == false){
-        // Mouseover: Draw white tile
-        if (t.posNumber() == 1) {
-            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 1);
-            SDL_RenderFillRect(renderer, &temp);
-        }
-        // 'Shadow' menu tile: Draw darker
-        if (t.posNumber() == 2) {
-            SDL_SetRenderDrawColor(renderer, 100, 65, 107, 1);
-            SDL_RenderFillRect(renderer, &temp);
-        }
-        // No mouseover: Draw default
-        else
-            SDL_RenderFillRect(renderer, &temp);
-    }
-    // Draw Main Game Tile
-    else {
-        // Keep last tile invisible
-        if (t.number() == (grid*grid))
+void Graphics::drawBoard(const std::vector<Tile>& t, const bool& drawnumber) {
+    for (int i = 0; i < t.size(); ++i) {
+        SDL_Rect temp = t[i].position();
+        
+        if      (t[i].tileType() == Tile::type::invisible)
             SDL_SetRenderDrawColor(renderer, 163, 118, 172, 1); // bg colour
         
-        // Render tile
+        else if (t[i].tileType() == Tile::type::rollover || t[i].tileType() == Tile::type::buttonpressed)
+            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 1); // highlight colour
+        
+        else if (t[i].tileType() == Tile::type::shadow)
+            SDL_SetRenderDrawColor(renderer, 100, 65, 107, 1); // shadow colour
+        
+        else
+            SDL_SetRenderDrawColor(renderer, 237, 229, 239, 1); // default colour
+        
         SDL_RenderFillRect(renderer, &temp);
         
-        // Render tile number
-        if (t.number() != (grid*grid)) {
-            std::string msg = std::to_string(t.number());
-            tilenumber = renderText(msg, "assets/Calibrib.ttf", fontcolour, 25);
-            SDL_QueryTexture(tilenumber, NULL, NULL, &temp.w, &temp.h);
-            renderTexture(tilenumber, temp.x+(TILE_SIZE/2 - temp.w/2), temp.y+(TILE_SIZE/2 - temp.h/2), nullptr);
+        if (drawnumber){
+            if (t[i].tileType() != Tile::type::invisible) {
+                std::string num = std::to_string(t[i].number());
+                tilenumber = renderText(num, "assets/Calibrib.ttf", fontcolour, 25);
+                SDL_QueryTexture(tilenumber, NULL, NULL, &temp.w, &temp.h);
+                renderTexture(tilenumber, temp.x+(TILE_SIZE/2 - temp.w/2), temp.y+(TILE_SIZE/2 - temp.h/2), nullptr);
+            }
         }
     }
 }
@@ -106,27 +96,21 @@ void Graphics::renderCat(const std::vector<Tile>& tiles, const std::vector<SDL_R
     }
 }
 
-void Graphics::setGridSize(const int& n) {
-    grid = n;
-    rawSize = (WINDOW_WIDTH - 2*WINDOW_PADDING) / grid;
-    TILE_PADDING = rawSize / 10;
-    TILE_SIZE    = rawSize - TILE_PADDING;
-}
-
 void Graphics::updateClicks(const int& n) {
-    SDL_Rect clickBanner       { WINDOW_PADDING + TILE_SIZE - 5, WINDOW_PADDING/2 };
-    SDL_Rect clickBannerShadow { WINDOW_PADDING + TILE_SIZE - 5 + 2, WINDOW_PADDING/2 + 2};
-    SDL_SetRenderDrawColor  (renderer, 100, 65, 107, 1);
-    SDL_RenderFillRect      (renderer, &clickBannerShadow);
-    SDL_SetRenderDrawColor  (renderer, 237, 229, 239, 1);
-    SDL_RenderFillRect      (renderer, &clickBanner);
-    
     std::string count = std::to_string(n);
     std::string message = "Clicks: " + count;
     clicks = renderText(message, "assets/GreenFlame.ttf", fontcolour, 15);
     int W; int H;
     SDL_QueryTexture(clicks, NULL, NULL, &W, &H);
-    renderTexture(clicks, (WINDOW_PADDING), (WINDOW_PADDING - 1.2*H), nullptr);
+    
+    SDL_Rect clickBanner       { WINDOW_WIDTH/2-W, WINDOW_HEIGHT/6-3*H, 2*W, 2*H };
+    SDL_Rect clickBannerShadow { WINDOW_WIDTH/2-W + 3, WINDOW_HEIGHT/6-3*H + 3, 2*W, 2*H};
+    SDL_SetRenderDrawColor  (renderer, 100, 65, 107, 1);
+    SDL_RenderFillRect      (renderer, &clickBannerShadow);
+    SDL_SetRenderDrawColor  (renderer, 237, 229, 239, 1);
+    SDL_RenderFillRect      (renderer, &clickBanner);
+    // to do, why the fuck cant I use clickBanner as a reference?
+    renderTexture(clicks, (0.77*(clickBanner.x+clickBanner.w) - W/2), (0.8*(clickBanner.y+clickBanner.h) - H/2), nullptr);
 }
 
 void Graphics::winMessage(const bool& win, const int& clicks, const std::string& message) {
@@ -140,12 +124,45 @@ void Graphics::winMessage(const bool& win, const int& clicks, const std::string&
 
 void Graphics::menuInstruction(const std::string& message) {
     SDL_Color darkpink { 100, 65, 107, 1 };
-    menuinstr = renderText(message, "assets/GreenFlame.ttf", darkpink, 20);
+    menuinstr = renderText(message, "assets/GreenFlame.ttf", darkpink, 12);
     int W; int H;
-    SDL_QueryTexture(wintext, NULL, NULL, &W, &H);
-    renderTexture(menuinstr, (0.5*WINDOW_WIDTH - 0.5*W), (WINDOW_HEIGHT - 2*H), nullptr);
+    SDL_QueryTexture(menuinstr, NULL, NULL, &W, &H);
+    renderTexture(menuinstr, (0.5*WINDOW_WIDTH - 0.5*W), (WINDOW_HEIGHT - 0.5*WINDOW_PADDING), nullptr);
 }
 
+void Graphics::menuText(std::vector<Tile> tiles, const bool& catmode) {
+    int number = 3;
+    int W; int H;
+    
+    for (int i = 0; i < 6; ++i){
+        std::string numStr = std::to_string(number);
+        std::string message = numStr + " x " + numStr;
+        
+        menutext = renderText(message, "assets/Calibrib.ttf", fontcolour, 25);
+        SDL_QueryTexture(menutext, NULL, NULL, &W, &H);
+        renderTexture(menutext, (tiles[i].position().x + 0.5*tiles[i].position().w - 0.5*W),
+                                (tiles[i].position().y + 0.5*tiles[i].position().h - 0.5*H), nullptr);
+        number += 1;
+    }
+    if (catmode){
+        SDL_Color tilecolour { 237, 229, 239, 1 };
+        menutext = renderText("Cat Mode", "assets/Calibrib.ttf", tilecolour, 20);
+        SDL_QueryTexture(menutext, NULL, NULL, &W, &H);
+        renderTexture(menutext, (tiles[6].position().x + 0.5*tiles[6].position().w - 0.5*W + 2),
+                                (tiles[6].position().y + 0.5*tiles[6].position().h - 0.5*H + 2), nullptr);
+    }
+    
+    menutext = renderText("START", "assets/Calibrib.ttf", fontcolour, 25);
+    SDL_QueryTexture(menutext, NULL, NULL, &W, &H);
+    renderTexture(menutext, (tiles[7].position().x + 0.5*tiles[7].position().w - 0.5*W),
+                            (tiles[7].position().y + 0.5*tiles[7].position().h - 0.5*H), nullptr);
+    
+    menutext = renderText("Select your grid size:", "assets/GreenFlame.ttf", fontcolour, 20);
+    SDL_QueryTexture(menutext, NULL, NULL, &W, &H);
+    renderTexture(menutext, 0.5*WINDOW_WIDTH - 0.5*W, WINDOW_PADDING-1.5*H, nullptr);
+}
+
+/*
 void Graphics::menuText(std::vector<SDL_Rect> positions, const bool& catmode) {
     int number = 3;
     int W; int H;
@@ -174,7 +191,7 @@ void Graphics::menuText(std::vector<SDL_Rect> positions, const bool& catmode) {
     menutext = renderText("Select your grid size:", "assets/GreenFlame.ttf", fontcolour, 20);
     SDL_QueryTexture(menutext, NULL, NULL, &W, &H);
     renderTexture(menutext, 0.5*WINDOW_WIDTH - 0.5*W, WINDOW_PADDING-1.5*H, nullptr);
-}
+}*/
 
 void Graphics::renderTexture(SDL_Texture *tex, int x, int y, SDL_Rect *clip = nullptr) {
     SDL_Rect dst;

@@ -10,10 +10,10 @@ bool MainGame::init(Graphics* graph, Game* g) {
     
     // Fill vector<SDL_Rect> 'positions' with possible positions of n*n tiles & make shadow positions
     loadPositions(positions, graphics->gridSize());
-    loadPositions(shiftPositions, graphics->gridSize(), shiftamount);
+    loadPositions(shadowPositions, graphics->gridSize(), shiftamount);
     // Assign these starting positions to n*n tiles in vector<Tile> 'tiles' & make shadow tiles
     makeTiles(tiles);
-    makeTiles(shiftTiles, shiftPositions);
+    makeTiles(shadowTiles, shadowPositions);
     
     // nonsense audio loading - to do
     Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
@@ -41,19 +41,54 @@ bool MainGame::init(Graphics* graph, Game* g) {
     return true;
 }
 
-void MainGame::quit() {
-    game     = NULL;
-    graphics = NULL;
-    click    = NULL;
-    cat1     = NULL;
-    cat2     = NULL;
-    cat3     = NULL;
-    Mix_Quit();
+void MainGame::loadPositions(std::vector<SDL_Rect>& positions, const int& gridsize) {
+    int x = graphics->winPadding();
+    int y = graphics->winPadding();
+    
+    for (int i = 0; i < gridsize; ++i) {
+        y = graphics->winPadding() + i*graphics->tileSize() + i*graphics->tilePadding();
+        for (int j = 0; j < gridsize; ++j) {
+            x = graphics->winPadding() + j*graphics->tileSize() + j*graphics->tilePadding();
+            positions.push_back( SDL_Rect{ x, y, graphics->tileSize(), graphics->tileSize() });
+        }
+    }
+}
+
+void MainGame::loadPositions(std::vector<SDL_Rect>& shadowpositions, const int& gridsize, const int& shiftPx) {
+    int x = graphics->winPadding();
+    int y = graphics->winPadding();
+    
+    for (int i = 0; i < gridsize; ++i) {
+        y = graphics->winPadding() + i*graphics->tileSize() + i*graphics->tilePadding() + shiftPx;
+        for (int j = 0; j < gridsize; ++j) {
+            x = graphics->winPadding() + j*graphics->tileSize() + j*graphics->tilePadding() + shiftPx;
+            shadowpositions.push_back( SDL_Rect{ x, y, graphics->tileSize(), graphics->tileSize() } );
+        }
+    }
+}
+
+void MainGame::makeTiles(std::vector<Tile>& tiles) {
+    for (int i = 0; i < positions.size(); ++i) {
+        tiles.push_back(Tile{positions[i], i+1, i+1}); // start counting from 1 for positions
+    }
+    tiles[tiles.size()-1].setTileType(Tile::type::invisible);
+}
+
+void MainGame::makeTiles(std::vector<Tile>& shadowtiles, const std::vector<SDL_Rect>& shadowpositions) {
+    for (int i = 0; i < shadowpositions.size(); ++i) {
+        shadowtiles.push_back(Tile{shadowpositions[i], i+1, i+1, Tile::type::shadow});
+    }
+    shadowtiles[tiles.size()-1].setTileType(Tile::type::invisible);
 }
 
 void MainGame::handleEvents(SDL_Event& event) {
     if (event.type == SDL_QUIT)
         game->setQuit();
+    
+    if (event.type == SDL_KEYDOWN) {
+        if (event.key.keysym.sym == SDLK_ESCAPE)
+            game->setQuit();
+    }
     
     if (event.type == SDL_KEYDOWN) {
         if (event.key.keysym.sym == SDLK_SPACE)
@@ -72,16 +107,22 @@ void MainGame::handleEvents(SDL_Event& event) {
     }
 }
 
+void MainGame::restart() {
+    gameWin = false;
+    clicks = 0;
+    scrambleTiles(tiles);
+}
+
 void MainGame::update() {
-    if (isSolved()) { // unnecessary 'gamewin == false'? to do
+    if (isSolved()) {
         gameWin = true;
     }
     
     else if (clickedTile >= 0) { // if mouse clicked on a tile
         if (isNeighbour(tiles[clickedTile], tiles[tiles.size()-1])){
             tiles[clickedTile].swap(tiles[tiles.size()-1]);
-            shiftTiles[clickedTile].swap(shiftTiles[tiles.size()-1]);
-            clickedTile = -1; // reset to defaul
+            shadowTiles[clickedTile].swap(shadowTiles[shadowTiles.size()-1]);
+            clickedTile = -1; // reset to default
             
             ++clicks;
             
@@ -104,70 +145,10 @@ void MainGame::update() {
     }
 }
 
-void MainGame::render() {
-    graphics->renderClear();
-    graphics->drawBoard(shiftTiles, false);
-    graphics->drawBoard(tiles, true);
-    
-    if (game->isCatMode()) {
-        graphics->renderCat(tiles, positions);
-    }
-    
-    graphics->updateClicks(clicks);
-    graphics->winMessage(gameWin, clicks, "You win! Click anywhere to restart"); // make sure it's not the start of the game
-    graphics->menuInstruction("Press [spacebar] to return to main menu");
-    graphics->update();
-}
-
-void MainGame::restart() {
-    gameWin = false;
-    clicks = 0;
-    
-    scrambleTiles(tiles);
-}
-
-void MainGame::loadPositions(std::vector<SDL_Rect>& positions, const int& gridsize) {
-    int x = graphics->winPadding();
-    int y = graphics->winPadding();
-    
-    for (int i = 0; i < gridsize; ++i) {
-        y = graphics->winPadding() + i*graphics->tileSize() + i*graphics->tilePadding();
-        for (int j = 0; j < gridsize; ++j) {
-            x = graphics->winPadding() + j*graphics->tileSize() + j*graphics->tilePadding();
-            positions.push_back( SDL_Rect{ x, y, graphics->tileSize(), graphics->tileSize() });
-        }
-    }
-}
-
-void MainGame::loadPositions(std::vector<SDL_Rect>& shiftpositions, const int& gridsize, const int& shiftPx) {
-    int x = graphics->winPadding();
-    int y = graphics->winPadding();
-    
-    for (int i = 0; i < gridsize; ++i) {
-        y = graphics->winPadding() + i*graphics->tileSize() + i*graphics->tilePadding() + shiftPx;
-        for (int j = 0; j < gridsize; ++j) {
-            x = graphics->winPadding() + j*graphics->tileSize() + j*graphics->tilePadding() + shiftPx;
-            shiftpositions.push_back( SDL_Rect{ x, y, graphics->tileSize(), graphics->tileSize() } );
-        }
-    }
-}
-
-void MainGame::makeTiles(std::vector<Tile>& tiles) {
-    for (int i = 0; i < positions.size(); ++i) {
-        tiles.push_back(Tile{positions[i], i+1, i+1}); // start counting from 1 for positions
-    }
-}
-// Used for tile 'shadows'
-void MainGame::makeTiles(std::vector<Tile>& shifttiles, const std::vector<SDL_Rect>& shiftpositions) {
-    for (int i = 0; i < shiftpositions.size(); ++i) {
-        shifttiles.push_back(Tile{shiftpositions[i], i, 2});
-    }
-}
-
 void MainGame::scrambleTiles(std::vector<Tile> t) {
     std::random_device rd;
     std::mt19937 rng(rd());
-    std::uniform_int_distribution<int> range(0, tiles.size()-2);
+    std::uniform_int_distribution<int> range(0, tiles.size()-2); // don't scramble last ('empty') tile
     
     for (int i = 0; i < tiles.size()-2; ++i) {
         int n = range(rng);
@@ -205,4 +186,29 @@ bool MainGame::isSolved() {
     if (correctTilesN == graphics->gridSize()*graphics->gridSize())
         return true;
     return false;
+}
+
+void MainGame::render() {
+    graphics->renderClear();
+    graphics->drawBoard(shadowTiles, false);
+    graphics->drawBoard(tiles, true);
+    
+    if (game->isCatMode()) {
+        graphics->renderCat(tiles, positions);
+    }
+    
+    graphics->updateClicks(clicks);
+    graphics->winMessage(gameWin, clicks, "You win! Click anywhere to restart"); // make sure it's not the start of the game
+    graphics->menuInstruction("Press spacebar for main menu");
+    graphics->update();
+}
+
+void MainGame::quit() {
+    game     = NULL;
+    graphics = NULL;
+    click    = NULL;
+    cat1     = NULL;
+    cat2     = NULL;
+    cat3     = NULL;
+    Mix_Quit();
 }

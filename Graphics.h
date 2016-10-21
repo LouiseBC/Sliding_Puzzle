@@ -11,10 +11,11 @@ public:
     
     void setGridSize (const int& n);
     void drawBoard   (const std::vector<Tile>& t, const bool& drawnumber);
+    void drawMenu    (const std::vector<Tile>& t);
     void drawTile    (const Tile& t, const bool& drawnumber);
     void winMessage  (const bool& win, const int& clicks, const std::string& message);
     void updateClicks(const int& n);
-    void menuText(std::vector<SDL_Rect> positions, const bool& catmode);
+    void menuText(std::vector<Tile> tiles, const bool& catmode);
     void menuInstruction(const std::string& message);
     void renderCat(const std::vector<Tile>& tiles, const std::vector<SDL_Rect>& positions);
     
