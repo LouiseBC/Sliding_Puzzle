@@ -110,8 +110,10 @@ void MenuState::update() {
             click = false;
         }
     }
-    else if (prevMousePos >= 0) // unset rollover
-        tiles[prevMousePos].setTileType(Tile::type::button);
+    else if (prevMousePos >= 0) {// unset rollover
+        if (tiles[prevMousePos].tileType() != Tile::type::buttonpressed)
+            tiles[prevMousePos].setTileType(Tile::type::button);
+    }
 }
 
 void MenuState::setRollOver() {
