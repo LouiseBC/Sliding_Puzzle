@@ -6,7 +6,7 @@
 class MainGame : public GameState {
     // Gamestate Functions
     bool init(Graphics* graphics, Game* game);
-    void quit();
+    ~MainGame();
     
     void handleEvents(SDL_Event& e);
     void update();
@@ -17,11 +17,9 @@ private:
     Graphics* graphics = NULL;
     
     // MainGame functions
-    void makeTiles(std::vector<Tile>& tiles);
-    void makeTiles(std::vector<Tile>& shadowtiles, const std::vector<SDL_Rect>& shadowpositions);
-    void loadPositions(std::vector<SDL_Rect>& positions, const int& gridsize);
-    void loadPositions(std::vector<SDL_Rect>& shadowpositions, const int& gridsize, const int& shiftpx);
-    void scrambleTiles(std::vector<Tile> t);
+    void makeTiles(std::vector<Tile>& tiles, const std::vector<SDL_Rect>& posiitons, const int& tiletype);
+    void loadPositions(std::vector<SDL_Rect>& shadowpositions, const int& gridsize, const int& shiftpx = 0);
+    void scrambleTiles(std::vector<Tile>& t, std::vector<Tile>& tshadow);
     void restart();
     
     bool isSolved();
@@ -40,9 +38,9 @@ private:
     std::vector<SDL_Rect> shadowPositions;
     
     Mix_Chunk* click = NULL;
-    Mix_Chunk* cat1 = NULL;
-    Mix_Chunk* cat2 = NULL;
-    Mix_Chunk* cat3 = NULL;
+    Mix_Chunk* cat1  = NULL;
+    Mix_Chunk* cat2  = NULL;
+    Mix_Chunk* cat3  = NULL;
 };
 
 #endif

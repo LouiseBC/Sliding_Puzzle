@@ -44,22 +44,6 @@ void Game::render()
         states.back()->render();
 }
 
-void Game::quitGame() {
-    /*Quit might be called when there are still
-     some states on the stack, so we need to get rid of them*/
-    while(states.size() > 0)
-    {
-        states.back()->quit();
-        
-        /*we need to delete the dynamically allocated space*/
-        delete states.back();
-        
-        states.pop_back();
-    }
-    //states = null?
-    graphics.destroy();
-}
-
 void Game::setQuit() {
     quit = true;
 }
@@ -78,10 +62,19 @@ void Game::pushState(GameState* state) {
 }
 
 void Game::popState() {
-    states.back()->quit();
     delete states.back();
     states.pop_back();
     
     if(states.size() == 0)
         quit = true;
+}
+
+void Game::quitGame() {
+    while(states.size() > 0)
+    {
+        delete states.back();
+        states.pop_back();
+    }
+    graphics.destroy();
+    SDL_Quit();
 }

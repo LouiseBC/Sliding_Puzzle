@@ -6,7 +6,7 @@
 class MenuState : public GameState {
 public:
     bool init(Graphics* graphics, Game* game);
-    void quit();
+    ~MenuState();
     
     void handleEvents(SDL_Event& e);
     void update();
@@ -16,24 +16,23 @@ private:
     Game* game = NULL;
     
     // MenuState Functions
-    void loadPositions (std::vector<SDL_Rect>& positions, const int& gridsize);
-    void loadPositions (std::vector<SDL_Rect>& shadowpositions, const int& gridsize, const int& shiftPx);
+    void loadPositions (std::vector<SDL_Rect>& positions, const int& gridsize, const int& shiftPx = 0);
     void makeTiles     (std::vector<Tile>& tiles, const std::vector<SDL_Rect>& positions, const int& tileType);
     int  getActiveTile (const int &x, const int &y);
+    void setRollOver   ();
+    void pushButton    ();
     void pushTile      (const int& mousePos);
     void liftTile      (const int& buttonClicked);
-    void pushButton    ();
     
     // MenuState Data
-    const int gridSize    { 3 };
-    const int tileSize    { 105 };
-    const int tilePadding { 11 };
-    const int shiftAmount { 7 };
+    const int gridSize     { 3 };
+    const int tileSize     { 105 };
+    const int tilePadding  { 11 };
     
-    int  mousePos      { -1 };
-    int  prevMousePos  { 0 };
+    int  mousePos          { -1 };
+    int  prevMousePos      { -1 };
     int  prevButtonClicked { -1 };
-    bool click         { false };
+    bool click             { false };
     
     std::vector<Tile> tiles;
     std::vector<Tile> shadowTiles;

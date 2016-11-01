@@ -1,7 +1,6 @@
 #ifndef Game_h
 #define Game_h
 #include <vector>
-#include <SDL2/SDL.h>
 #include "Graphics.h"
 
 class GameState;
@@ -15,7 +14,6 @@ public:
     
     void pushState(GameState* state);
     void popState();
-    int statesSize() { return states.size(); }
     void setQuit();
     
     void toggleCatMode();
