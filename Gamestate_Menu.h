@@ -12,12 +12,13 @@ public:
     void update();
     void render();
 private:
-    Graphics* graphics = NULL;
-    Game* game = NULL;
+    Graphics* graphics = nullptr;
+    Game* game = nullptr;
     
     // MenuState Functions
     void loadPositions (std::vector<SDL_Rect>& positions, const int& gridsize, const int& shiftPx = 0);
     void makeTiles     (std::vector<Tile>& tiles, const std::vector<SDL_Rect>& positions, const int& tileType);
+    bool loadAudio     ();
     int  getActiveTile (const int &x, const int &y);
     void setRollOver   ();
     void pushButton    ();
@@ -39,8 +40,8 @@ private:
     std::vector<SDL_Rect> positions;
     std::vector<SDL_Rect> shadowPositions;
     
-    Mix_Chunk* rollOver = NULL;
-    Mix_Chunk* clickSound = NULL;
+    Mix_Chunk* rollOver = nullptr;
+    Mix_Chunk* clickSound = nullptr;
 };
 
 #endif

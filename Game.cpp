@@ -1,16 +1,13 @@
-#include <iostream>
-#include <random>
 #include "Game.h"
-#include "Tile.h"
 #include "Gamestate.h"
-
 
 Game::Game() {
     quit = false;
 }
 
 bool Game::init(GameState* state) {
-    graphics.setup();
+    if (!graphics.setup())
+        return false;
     pushState(state);
     return true;
 }

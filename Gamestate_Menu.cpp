@@ -14,7 +14,10 @@ bool MenuState::init(Graphics* graph, Game* g){
     loadPositions(shadowPositions, gridSize, shiftAmount);
     makeTiles(shadowTiles, shadowPositions, Tile::type::shadow);
     
-    // Load sounds
+    return loadAudio();
+}
+
+bool MenuState::loadAudio() {
     Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
     rollOver = Mix_LoadWAV("assets/hover.wav");
     if( rollOver == NULL ) {
@@ -174,8 +177,8 @@ void MenuState::render() {
 
 MenuState::~MenuState() {
     Mix_Quit();
-    graphics   = NULL;
-    game       = NULL;
-    rollOver   = NULL;
-    clickSound = NULL;
+    graphics = nullptr;
+    game = nullptr;
+    rollOver = nullptr;
+    clickSound = nullptr;
 }

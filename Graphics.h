@@ -5,7 +5,7 @@
 
 class Graphics {
 public:
-    void setup();
+    bool setup();
     void destroy();
     
     void setGridSize (const int& n);
@@ -38,15 +38,15 @@ private:
     
     SDL_Colour fontcolour {0, 0, 0, 1};
     
-    SDL_Window*   window     = NULL;
-    SDL_Renderer* renderer   = NULL;
+    SDL_Window*   window     = nullptr;
+    SDL_Renderer* renderer   = nullptr;
     
-    SDL_Texture*  tilenumber = NULL;
-    SDL_Texture*  clicks     = NULL;
-    SDL_Texture*  wintext    = NULL;
-    SDL_Texture*  menutext   = NULL;
-    SDL_Texture*  menuinstr  = NULL;
-    SDL_Texture*  cat        = NULL;
+    SDL_Texture*  tilenumber = nullptr;
+    SDL_Texture*  clicks     = nullptr;
+    SDL_Texture*  wintext    = nullptr;
+    SDL_Texture*  menutext   = nullptr;
+    SDL_Texture*  menuinstr  = nullptr;
+    SDL_Texture*  cat        = nullptr;
     
     // Graphics-only functions
     SDL_Texture* renderText (const std::string &message, const std::string &filepath, SDL_Color colour, int fontsize);

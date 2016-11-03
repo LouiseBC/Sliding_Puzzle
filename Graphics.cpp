@@ -3,45 +3,48 @@
 #include <SDL2_ttf/SDL_ttf.h>
 #include <SDL2_image/SDL_image.h>
 
-void Graphics::setup() {
-    if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+bool Graphics::setup() {
+    if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
         std::cerr << "Error: init" << SDL_GetError() << std::endl;
-    
-    else {
-        window = SDL_CreateWindow("Sliding Puzzle", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
-        if (window == nullptr)
-            std::cerr << "Error: Create window" << SDL_GetError() << std::endl;
-        
-        else {
-            renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-            if (renderer == nullptr)
-                std::cerr << "Error: Create renderer" << SDL_GetError() << std::endl;
-            
-            else {
-                if( TTF_Init() == -1 )
-                    std::cerr << "SDL_ttf could not initialise" << TTF_GetError() << std::endl;
-                else {
-                    cat = IMG_LoadTexture(renderer, "assets/cat2.png");
-                    if (cat == nullptr)
-                        std::cerr << "Error: Load cat texture";
-                }
-            }
-        }
+        return false;
     }
+    
+    window = SDL_CreateWindow("Sliding Puzzle", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_SHOWN);
+    if (window == nullptr) {
+        std::cerr << "Error: Create window" << SDL_GetError() << std::endl;
+        return false;
+    }
+    
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    if (renderer == nullptr) {
+        std::cerr << "Error: Create renderer" << SDL_GetError() << std::endl;
+        return false;
+    }
+    
+    if( TTF_Init() == -1 ) {
+        std::cerr << "SDL_ttf could not initialise" << TTF_GetError() << std::endl;
+        return false;
+    }
+    cat = IMG_LoadTexture(renderer, "assets/cat2.png");
+    if (cat == nullptr) {
+        std::cerr << "Error: Load cat texture";
+        return false;
+    }
+    return true;
 }
 
 void Graphics::destroy() {
     TTF_Quit();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
-    window     = NULL;
-    renderer   = NULL;
-    tilenumber = NULL;
-    clicks     = NULL;
-    wintext    = NULL;
-    menutext   = NULL;
-    menuinstr  = NULL;
-    cat        = NULL;
+    window = nullptr;
+    renderer = nullptr;
+    tilenumber = nullptr;
+    clicks = nullptr;
+    wintext = nullptr;
+    menutext = nullptr;
+    menuinstr = nullptr;
+    cat = nullptr;
 }
 
 void Graphics::setGridSize(const int& n) {

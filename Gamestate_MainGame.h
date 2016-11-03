@@ -13,13 +13,14 @@ class MainGame : public GameState {
     void render();
     
 private:
-    Game* game = NULL;
-    Graphics* graphics = NULL;
+    Game* game = nullptr;
+    Graphics* graphics = nullptr;
     
     // MainGame functions
     void makeTiles(std::vector<Tile>& tiles, const std::vector<SDL_Rect>& posiitons, const int& tiletype);
     void loadPositions(std::vector<SDL_Rect>& shadowpositions, const int& gridsize, const int& shiftpx = 0);
     void scrambleTiles(std::vector<Tile>& t, std::vector<Tile>& tshadow);
+    bool loadAudio();
     void restart();
     
     bool isSolved();
@@ -37,10 +38,10 @@ private:
     std::vector<SDL_Rect> positions;
     std::vector<SDL_Rect> shadowPositions;
     
-    Mix_Chunk* click = NULL;
-    Mix_Chunk* cat1  = NULL;
-    Mix_Chunk* cat2  = NULL;
-    Mix_Chunk* cat3  = NULL;
+    Mix_Chunk* click = nullptr;
+    Mix_Chunk* cat1  = nullptr;
+    Mix_Chunk* cat2  = nullptr;
+    Mix_Chunk* cat3  = nullptr;
 };
 
 #endif
